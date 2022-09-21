@@ -14,14 +14,13 @@ contract NFTUniqueAsset is ERC721, Ownable {
    mapping (uint256 => string) private _tokenURIs;
    string private _baseURIextended;
 
-   uint256 private nftTotalBalance;
-   uint256 private nftMintingPrice;
+   uint256 private nftMaxSupply;
+   uint256 private nftCurrentSupply;
    uint256 private contractCreated;
-   uint8 private daysAfterNftMintingPriceIncreased = 5;
 
-   constructor(string memory name, string memory symbol, uint256 nftTotalBalanceAtStart, uint256 nftMintingPriceAtTheBeginning) ERC721(name, symbol) {
-      nftTotalBalance = nftTotalBalanceAtStart;
-      nftMintingPrice = nftMintingPriceAtTheBeginning;
+   constructor(string memory name, string memory symbol, uint256 maxSupply) ERC721(name, symbol) {
+      nftMaxSupply = maxSupply;
+      nftCurrentSupply = nftMaxSupply;
       contractCreated = block.timestamp;
    }
 
@@ -56,7 +55,11 @@ contract NFTUniqueAsset is ERC721, Ownable {
       return string(abi.encodePacked(base, tokenId.toString()));
    }
 
-   function mint(address to, uint256 tokenId, string memory tokenUri) onlyOwner() public {
+   function mint(address to, string memory tokenUri) onlyOwner() public {
+      require(nftCurrentSupply > 0, "NftMaxSupply has been reached");
+      nftCurrentSupply -= 1;
+      tokenIdCounter.increment();
+      uint256 tokenId = tokenIdCounter.current();
       _mint(to, tokenId);
       _setTokenURI(tokenId, tokenUri);
    }
@@ -65,23 +68,8 @@ contract NFTUniqueAsset is ERC721, Ownable {
       return tokenIdCounter.current();
    }
 
-   function updateNftMintingPrice() private {
-      if(block.timestamp > contractCreated + daysAfterNftMintingPriceIncreased) {
-         nftMintingPrice = 2;
-      }
-   }
-
-   function getNftTotalBalance() public view returns (uint256) {
-      return nftTotalBalance;
-   }
-
-   function awardItem(address to, string memory tokenUri) onlyOwner() public {
-      updateNftMintingPrice();
-      require(nftTotalBalance >= nftMintingPrice, "nftTotalBalance has been depleted");
-      nftTotalBalance -= nftMintingPrice;
-      tokenIdCounter.increment();
-      uint256 tokenId = tokenIdCounter.current();
-      mint(to, tokenId, tokenUri);
+   function getNftCurrentSupply() public view returns (uint256) {
+      return nftCurrentSupply;
    }
 
 }
