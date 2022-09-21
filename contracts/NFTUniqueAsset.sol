@@ -53,10 +53,13 @@ contract NFTUniqueAsset is ERC721, Ownable {
       _setTokenURI(tokenId, tokenUri);
    }
 
-   function awardItem(address to, string memory tokenUri) onlyOwner() public returns (uint256){
+   function getTokenIdCounter() public view returns (uint256) {
+      return tokenIdCounter.current();
+   }
+
+   function awardItem(address to, string memory tokenUri) onlyOwner() public {
       tokenIdCounter.increment();
       uint256 tokenId = tokenIdCounter.current();
       mint(to, tokenId, tokenUri);
-      return tokenId;
    }
 }

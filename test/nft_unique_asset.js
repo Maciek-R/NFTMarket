@@ -25,4 +25,20 @@ contract("NFTUniqueAsset", async accounts => {
     let retrievedTokenUri = await instance.tokenURI(tokenId);
     assert.equal(retrievedTokenUri, tokenUri);
   });
+
+  it("should increase tokenIdCounter each time 'awardItem' is called", async () => {
+    let instance = await NFTUniqueAsset.deployed();
+
+    let tokenUri = "tokenUri";
+    let tokenRecipient = "0xEea01CAc2C7861d3C656B5f30934CA353C6f8604"
+
+    await instance.awardItem(tokenRecipient, tokenUri);
+    assert.equal(await instance.getTokenIdCounter(), 1);
+
+    await instance.awardItem(tokenRecipient, tokenUri);
+    assert.equal(await instance.getTokenIdCounter(), 2);
+
+    await instance.awardItem(tokenRecipient, tokenUri);
+    assert.equal(await instance.getTokenIdCounter(), 3);
+  });
 });
