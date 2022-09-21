@@ -1,4 +1,5 @@
 const NFTUniqueAsset = artifacts.require("NFTUniqueAsset");
+require('chai').use(require('chai-as-promised')).should();
 
 contract("NFTUniqueAsset", async accounts => {
   it("should create nft with name and symbol", async () => {
@@ -26,7 +27,7 @@ contract("NFTUniqueAsset", async accounts => {
     assert.equal(retrievedTokenUri, tokenUri);
   });
 
-  it("should increase tokenIdCounter each time 'awardItem' is called", async () => {
+  it("should increase tokenIdCounter each time 'awardItem' is called and decrease nftTotalBalance", async () => {
     let instance = await NFTUniqueAsset.deployed();
 
     let tokenUri = "tokenUri";
@@ -40,5 +41,20 @@ contract("NFTUniqueAsset", async accounts => {
 
     await instance.awardItem(tokenRecipient, tokenUri);
     assert.equal(await instance.getTokenIdCounter(), 3);
+
+    let nftTotalBalance = await instance.getNftTotalBalance();
+    assert.equal(nftTotalBalance, 97);
+  });
+
+  it("should reject awarding when ntfTotalBalance has been depleted", async () => {
+    let instance = await NFTUniqueAsset.new("name", "symbol", 1, 1);
+
+    let tokenUri = "tokenUri";
+    let tokenRecipient = "0xEea01CAc2C7861d3C656B5f30934CA353C6f8604"
+
+    await instance.awardItem(tokenRecipient, tokenUri);
+
+    let result = await instance.awardItem(tokenRecipient, tokenUri).should.be.rejected;
+    assert.equal(result.reason, "nftTotalBalance has been depleted");
   });
 });
