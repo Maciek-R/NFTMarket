@@ -16,7 +16,7 @@ contract NFTUniqueAsset is ERC721, Ownable {
 
    uint256 private nftMaxSupply;
    uint256 private nftCurrentSupply;
-   uint256 private contractCreated;
+   uint public contractCreated;
 
    constructor(string memory name, string memory symbol, uint256 maxSupply) ERC721(name, symbol) {
       nftMaxSupply = maxSupply;
@@ -57,6 +57,7 @@ contract NFTUniqueAsset is ERC721, Ownable {
 
    function mint(address to, string memory tokenUri) onlyOwner() public {
       require(nftCurrentSupply > 0, "NftMaxSupply has been reached");
+      //TODO 5 days for minting;
       nftCurrentSupply -= 1;
       tokenIdCounter.increment();
       uint256 tokenId = tokenIdCounter.current();
