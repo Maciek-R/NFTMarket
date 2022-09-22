@@ -15,7 +15,7 @@ contract NFTUniqueAssetMarket {
     }
 
     function buyNft(string memory tokenUri) public payable {
-        require(msg.value > 1, string(abi.encodePacked("To buy Nft you should pay 1 ETH! You paid: ", msg.value)));
+        require(msg.value >= 1 ether, "To buy Nft you should pay 1 ETH!");
         require(msg.sender != owner, "Owner can't buy NFT");
 
         nftContract.mint(msg.sender, tokenUri);
