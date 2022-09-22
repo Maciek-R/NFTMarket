@@ -3,7 +3,7 @@ require('chai').use(require('chai-as-promised')).should();
 
 contract("NFTUniqueAsset", async accounts => {
   it("should create nft with name and symbol", async () => {
-    let instance = await NFTUniqueAsset.deployed();
+    let instance = await NFTUniqueAsset.new("Unique NFT Asset", "UNA", 100);
 
     let name = await instance.name();
     let symbol = await instance.symbol();
@@ -13,7 +13,7 @@ contract("NFTUniqueAsset", async accounts => {
   });
 
   it("should mint - assign tokenUri and address to given tokenId", async () => {
-    let instance = await NFTUniqueAsset.deployed();
+    let instance = await NFTUniqueAsset.new("name", "symbol", 100);
 
     let tokenUri = "tokenUri";
     let tokenRecipient = "0xEea01CAc2C7861d3C656B5f30934CA353C6f8604"

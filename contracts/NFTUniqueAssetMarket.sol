@@ -1,22 +1,24 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.0;
 
+import "./NFTUniqueAsset.sol";
+
 contract NFTUniqueAssetMarket {
 
     address payable public owner;
-    address public nftContract;
+    NFTUniqueAsset nftContract;
 
-    constructor(address nftUniqueAssetContract) payable {
+    constructor(string memory name, string memory symbol, uint256 maxSupply) payable {
+        NFTUniqueAsset nftUniqueAssetContract = new NFTUniqueAsset(name, symbol, maxSupply);
         owner = payable(msg.sender);
         nftContract = nftUniqueAssetContract;
     }
 
-    function buyNft(string memory tokenUri) public payable returns (bool) {
+    function buyNft(string memory tokenUri) public payable {
         require(msg.value > 1, string(abi.encodePacked("To buy Nft you should pay 1 ETH! You paid: ", msg.value)));
         require(msg.sender != owner, "Owner can't buy NFT");
 
-        (bool success, bytes memory data) = nftContract.call{value: msg.value}(abi.encodeWithSignature("mint(address, string memory)", msg.sender, tokenUri));
-        return success;
+        nftContract.mint(msg.sender, tokenUri);
     }
 
     function getContractBalance() public view returns (uint) {
@@ -28,5 +30,9 @@ contract NFTUniqueAssetMarket {
         // unmint
         address payable sender = payable(msg.sender);
         sender.transfer(1);
+    }
+
+    function ownerOf(uint256 tokenId) public view returns (address) {
+        return nftContract.ownerOf(tokenId);
     }
 }
