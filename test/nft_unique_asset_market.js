@@ -1,129 +1,130 @@
-const NFTUniqueAssetMarket = artifacts.require("NFTUniqueAssetMarket");
-const { ethers } = require("ethers");
-const NFTUniqueAsset = artifacts.require("NFTUniqueAsset");
-const { time } = require('@openzeppelin/test-helpers');
+const {expect} = require('chai');
+const {ethers} = require("hardhat");
+const {time} = require("@nomicfoundation/hardhat-network-helpers");
+const {abi} = require('../artifacts/contracts/NFTUniqueAsset.sol/NFTUniqueAsset.json');
 
-var fs = require('fs');
-const ABI_PATH = 'build/contracts/NFTUniqueAsset.json';
-const fsPromises = fs.promises;
-
-contract("NFTUniqueAssetMarket", async accounts => {
+describe("NFTUniqueAssetMarket", async () => {
   it("should buy nft - increase contract balance and assign tokenId to caller", async () => {
-    let marketInstance = await NFTUniqueAssetMarket.new("Unique NFT Asset", "UNA", 100);
+    let marketInstance = await getNftUniqueAssetMarketInstance("Unique NFT Asset", "UNA", 100);
+    const [_, signer1] = await ethers.getSigners();
 
     let marketBalance = await marketInstance.getContractBalance();
-    assert.equal(marketBalance, 0);
+    expect(marketBalance).to.equal(0);
 
-    await marketInstance.buyNft("tokenUri", {value: ethers.utils.parseEther("1"), from: accounts[1]});
+    await marketInstance.connect(signer1).buyNft("tokenUri", {value: ethers.utils.parseEther("1")});
 
     let marketBalanceAfterBuy = await marketInstance.getContractBalance();
-    assert.equal(marketBalanceAfterBuy.toString(), ethers.utils.parseEther("1"));
+    expect(marketBalanceAfterBuy.toString()).to.equal(ethers.utils.parseEther("1"));
 
-    let owner = await marketInstance.ownerOf(1);
-    assert.equal(owner, accounts[1]);
+    let ownerOfToken = await marketInstance.ownerOf(1);
+    expect(ownerOfToken).to.equal(signer1.address);
   });
 
   it("should reject - not enough Ether send", async () => {
-    let instance = await NFTUniqueAssetMarket.new("Unique NFT Asset", "UNA", 100);
+    let marketInstance = await getNftUniqueAssetMarketInstance("Unique NFT Asset", "UNA", 100);
+    const [_, signer1] = await ethers.getSigners();
 
-    let result = await instance.buyNft("tokenUri", {value: ethers.utils.parseEther("0.5"), from: accounts[1]}).should.be.rejected;
-    let marketBalance = await instance.getContractBalance();
+    let buyPromise = marketInstance.connect(signer1).buyNft("tokenUri", {value: ethers.utils.parseEther("0.5")});
+    await expect(buyPromise).to.be.revertedWith("Not enough funds!");
 
-    assert.equal(marketBalance, 0);
-    assert.equal(result.reason, "Not enough funds!");
+    let marketBalance = await marketInstance.getContractBalance();
+    expect(marketBalance).to.equal(0);
   });
 
   it("should buy and sell nft - sold Nft belong to contract", async () => {
-    let marketInstance = await NFTUniqueAssetMarket.new("Unique NFT Asset", "UNA", 100);
-    let nftContractInstance = await getNftContractInstance(marketInstance, 1);
+    let marketInstance = await getNftUniqueAssetMarketInstance("Unique NFT Asset", "UNA", 100);
+    let nftContractInstance = await getNftContractInstance(marketInstance);
+    const [_, signer1] = await ethers.getSigners();
 
     let marketBalance = await marketInstance.getContractBalance();
-    assert.equal(marketBalance, 0);
+    expect(marketBalance).to.equal(0);
 
-    await marketInstance.buyNft("tokenUri", {value: ethers.utils.parseEther("1"), from: accounts[1]});
+    let buyResult = await marketInstance.connect(signer1).buyNft("tokenUri", {value: ethers.utils.parseEther("1")});
+    await expect(buyResult).to.emit(marketInstance, "NftBought").withArgs(signer1.address, 1);
 
     let marketBalanceAfterBuy = await marketInstance.getContractBalance();
-    assert.equal(marketBalanceAfterBuy.toString(), ethers.utils.parseEther("1"));
+    expect(marketBalanceAfterBuy.toString()).to.equal(ethers.utils.parseEther("1"));
 
     let owner = await marketInstance.ownerOf(1);
-    assert.equal(owner, accounts[1]);
+    expect(owner).to.equal(signer1.address);
 
-    await nftContractInstance.approve(marketInstance.address, 1);
+    await nftContractInstance.connect(signer1).approve(marketInstance.address, 1);
 
-    await marketInstance.sellNft(1, {from: accounts[1]});
+    let soldResult = await marketInstance.connect(signer1).sellNft(1);
+    await expect(soldResult).to.emit(marketInstance, "NftSold").withArgs(signer1.address, 1);
 
     let marketBalanceAfterSelling = await marketInstance.getContractBalance();
-    assert.equal(marketBalanceAfterSelling, 0);
+    expect(marketBalanceAfterSelling).to.equal(0);
 
     let newOwner = await marketInstance.ownerOf(1);
-    assert.equal(newOwner, marketInstance.address);
+    expect(newOwner).to.equal(marketInstance.address);
   });
 
   it("should buy nft for 2 eth after some time", async () => {
-    let marketInstance = await NFTUniqueAssetMarket.new("Unique NFT Asset", "UNA", 100);
+    let marketInstance = await getNftUniqueAssetMarketInstance("Unique NFT Asset", "UNA", 100);
+    const [_, signer1] = await ethers.getSigners();
 
-    await time.increase(time.duration.days(6));
+    await time.increase(time.duration.days(5));
 
-    let result = await marketInstance.buyNft("tokenUri", {value: ethers.utils.parseEther("1"), from: accounts[1]}).should.be.rejected;
-    assert.equal(result.reason, "Not enough funds!");
+    let buyPromise = marketInstance.connect(signer1).buyNft("tokenUri", {value: ethers.utils.parseEther("1")});
+    await expect(buyPromise).to.be.revertedWith("Not enough funds!");
 
-    await marketInstance.buyNft("tokenUri", {value: ethers.utils.parseEther("2"), from: accounts[1]})
+    await marketInstance.connect(signer1).buyNft("tokenUri", {value: ethers.utils.parseEther("2")})
 
     let marketBalanceAfterBuy = await marketInstance.getContractBalance();
-    assert.equal(marketBalanceAfterBuy.toString(), ethers.utils.parseEther("2"));
+    expect(marketBalanceAfterBuy.toString()).to.equal(ethers.utils.parseEther("2"));
 
     let owner = await marketInstance.ownerOf(1);
-    assert.equal(owner, accounts[1]);
+    expect(owner).to.equal(signer1.address);
   });
 
 
   it("should buy 2 tokens for 1 eth and after time sell 1 for 2 eth", async () => {
-    let marketInstance = await NFTUniqueAssetMarket.new("Unique NFT Asset", "UNA", 100);
-    let nftContractInstance = await getNftContractInstance(marketInstance, 1);
+    let marketInstance = await getNftUniqueAssetMarketInstance("Unique NFT Asset", "UNA", 100);
+    let nftContractInstance = await getNftContractInstance(marketInstance);
+    const [_, signer1] = await ethers.getSigners();
 
     let marketBalance = await marketInstance.getContractBalance();
-    assert.equal(marketBalance, 0);
+    expect(marketBalance).to.equal(0);
 
-    await marketInstance.buyNft("tokenUri1", {value: ethers.utils.parseEther("1"), from: accounts[1]});
-    await marketInstance.buyNft("tokenUri2", {value: ethers.utils.parseEther("1"), from: accounts[1]});
+    await marketInstance.connect(signer1).buyNft("tokenUri1", {value: ethers.utils.parseEther("1")});
+    await marketInstance.connect(signer1).buyNft("tokenUri2", {value: ethers.utils.parseEther("1")});
 
     let marketBalanceAfterBuy = await marketInstance.getContractBalance();
-    assert.equal(marketBalanceAfterBuy.toString(), ethers.utils.parseEther("2"));
+    expect(marketBalanceAfterBuy.toString()).to.equal(ethers.utils.parseEther("2"));
 
     let ownerOfToken1 = await marketInstance.ownerOf(1);
     let ownerOfToken2 = await marketInstance.ownerOf(2);
-    assert.equal(ownerOfToken1, accounts[1]);
-    assert.equal(ownerOfToken2, accounts[1]);
+    expect(ownerOfToken1).to.equal(signer1.address);
+    expect(ownerOfToken2).to.equal(signer1.address);
 
-    await nftContractInstance.approve(marketInstance.address, 1);
-    await nftContractInstance.approve(marketInstance.address, 2);
+    await nftContractInstance.connect(signer1).approve(marketInstance.address, 1);
+    await nftContractInstance.connect(signer1).approve(marketInstance.address, 2);
 
-    await time.increase(time.duration.days(6));
+    await time.increase(time.duration.days(5));
 
-    await marketInstance.sellNft(1, {from: accounts[1]});
+    await marketInstance.connect(signer1).sellNft(1);
 
     let marketBalanceAfterSelling = await marketInstance.getContractBalance();
-    assert.equal(marketBalanceAfterSelling, 0);
+    expect(marketBalanceAfterSelling).to.equal(0);
 
     let newOwnerOfToken1 = await marketInstance.ownerOf(1);
     let newOwnerOfToken2 = await marketInstance.ownerOf(2);
-    assert.equal(newOwnerOfToken1, marketInstance.address);
-    assert.equal(newOwnerOfToken2, accounts[1]);
+    expect(newOwnerOfToken1).to.equal(marketInstance.address);
+    expect(newOwnerOfToken2).to.equal(signer1.address);
   });
 
-  async function getAbi() {
-    const data = await fsPromises.readFile(ABI_PATH, 'utf8');
-    return JSON.parse(data)['abi'];
-  }
-
-  async function getNftContractInstance(nftMarketInstance, asAccountNumber) {
+  async function getNftContractInstance(nftMarketInstance) {
     let nftContractAddress = await nftMarketInstance.getNftContractAddress();
 
     let provider = new ethers.providers.JsonRpcProvider();
-    // const abi = NFTUniqueAsset._json.abi; //both abi works
-    const abi = await getAbi();
 
-    let signer = provider.getSigner(asAccountNumber);
+    let signer = provider.getSigner(0);
     return new ethers.Contract(nftContractAddress, abi, signer);
   }
+
+    async function getNftUniqueAssetMarketInstance(name, symbol, maxSupply) {
+        const NFTUniqueAssetMarket = await ethers.getContractFactory("NFTUniqueAssetMarket");
+        return await NFTUniqueAssetMarket.deploy(name, symbol, maxSupply);
+    }
 });

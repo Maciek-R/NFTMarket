@@ -1,59 +1,64 @@
-const NFTUniqueAsset = artifacts.require("NFTUniqueAsset");
-require('chai').use(require('chai-as-promised')).should();
+const {expect} = require('chai');
+const {ethers} = require("hardhat");
 
-contract("NFTUniqueAsset", async accounts => {
+describe("NFTUniqueAsset", async () => {
   it("should create nft with name and symbol", async () => {
-    let instance = await NFTUniqueAsset.new("Unique NFT Asset", "UNA", 100);
+    let instance = await getNftUniqueAssetInstance("Unique NFT Asset", "UNA", 100);
 
     let name = await instance.name();
     let symbol = await instance.symbol();
 
-    assert.equal(name, "Unique NFT Asset");
-    assert.equal(symbol, "UNA");
+    expect(name).to.equal("Unique NFT Asset");
+    expect(symbol).to.equal("UNA");
   });
 
   it("should mint - assign tokenUri and address to given tokenId", async () => {
-    let instance = await NFTUniqueAsset.new("name", "symbol", 100);
+    let instance = await getNftUniqueAssetInstance("name", "symbol", 100);
 
     let tokenUri = "tokenUri";
     let tokenRecipient = "0xEea01CAc2C7861d3C656B5f30934CA353C6f8604"
     await instance.mint(tokenRecipient, tokenUri);
 
     let retrievedOwner = await instance.ownerOf(1);
-    assert.equal(retrievedOwner, tokenRecipient);
+    expect(retrievedOwner).to.equal(tokenRecipient);
 
     let retrievedTokenUri = await instance.tokenURI(1);
-    assert.equal(retrievedTokenUri, tokenUri);
+    expect(retrievedTokenUri).to.equal(tokenUri);
   });
 
   it("should increase tokenIdCounter each time 'mint' is called and decrease nftCurrentSupply", async () => {
-    let instance = await NFTUniqueAsset.new("name", "symbol", 100);
+    let instance = await getNftUniqueAssetInstance("name", "symbol", 100);
 
     let tokenUri = "tokenUri";
     let tokenRecipient = "0xEea01CAc2C7861d3C656B5f30934CA353C6f8604"
 
     await instance.mint(tokenRecipient, tokenUri);
-    assert.equal(await instance.getTokenIdCounter(), 1);
+    expect(await instance.getTokenIdCounter()).to.equal(1);
 
     await instance.mint(tokenRecipient, tokenUri);
-    assert.equal(await instance.getTokenIdCounter(), 2);
+    expect(await instance.getTokenIdCounter()).to.equal(2);
 
     await instance.mint(tokenRecipient, tokenUri);
-    assert.equal(await instance.getTokenIdCounter(), 3);
+    expect(await instance.getTokenIdCounter()).to.equal(3);
 
     let nftTotalBalance = await instance.getNftCurrentSupply();
-    assert.equal(nftTotalBalance, 97);
+    expect(nftTotalBalance).to.equal(97);
   });
 
   it("should reject awarding when nftMaxSupply has been reached", async () => {
-    let instance = await NFTUniqueAsset.new("name", "symbol", 1);
+    let instance = await getNftUniqueAssetInstance("name", "symbol", 1);
 
     let tokenUri = "tokenUri";
     let tokenRecipient = "0xEea01CAc2C7861d3C656B5f30934CA353C6f8604"
 
     await instance.mint(tokenRecipient, tokenUri);
 
-    let result = await instance.mint(tokenRecipient, tokenUri).should.be.rejected;
-    assert.equal(result.reason, "NftMaxSupply has been reached");
+    let mintingPromise = instance.mint(tokenRecipient, tokenUri);
+    await expect(mintingPromise).to.be.revertedWith("NftMaxSupply has been reached");
   });
+
+  async function getNftUniqueAssetInstance(name, symbol, maxSupply) {
+    const NFTUniqueAsset = await ethers.getContractFactory("NFTUniqueAsset");
+    return await NFTUniqueAsset.deploy(name, symbol, maxSupply);
+  }
 });
