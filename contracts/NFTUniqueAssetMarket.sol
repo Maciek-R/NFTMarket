@@ -7,8 +7,8 @@ import "@openzeppelin/contracts/token/ERC721/IERC721Receiver.sol";
 contract NFTUniqueAssetMarket is IERC721Receiver {
 
     NFTUniqueAsset nftContract;
-    event NftBought();
-    event NftSold();
+    event NftBought(address indexed buyer, uint256 tokenId);
+    event NftSold(address indexed seller, uint256 tokenId);
 
     constructor(string memory name, string memory symbol, uint256 maxSupply) payable {
         NFTUniqueAsset nftUniqueAssetContract = new NFTUniqueAsset(name, symbol, maxSupply);
@@ -26,7 +26,8 @@ contract NFTUniqueAssetMarket is IERC721Receiver {
     function buyNft(string memory tokenUri) public payable {
         require(msg.value >= getNftPrice(), "Not enough funds!");
 
-        nftContract.mint(msg.sender, tokenUri);
+        uint256 tokenId = nftContract.mint(msg.sender, tokenUri);
+        emit NftBought(msg.sender, tokenId);
     }
 
     function getContractBalance() public view returns (uint) {
@@ -41,6 +42,7 @@ contract NFTUniqueAssetMarket is IERC721Receiver {
         nftContract.safeTransferFrom(msg.sender, address(this), tokenId);
         address payable sender = payable(msg.sender);
         sender.transfer(nftPrice);
+        emit NftSold(msg.sender, tokenId);
     }
 
     function ownerOf(uint256 tokenId) public view returns (address) {
@@ -56,7 +58,7 @@ contract NFTUniqueAssetMarket is IERC721Receiver {
         address from,
         uint256 tokenId,
         bytes calldata data
-    ) external returns (bytes4) {
+    ) external pure returns (bytes4) {
         return IERC721Receiver.onERC721Received.selector;
     }
 }

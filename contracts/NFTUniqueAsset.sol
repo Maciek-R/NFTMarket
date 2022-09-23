@@ -55,7 +55,7 @@ contract NFTUniqueAsset is ERC721, Ownable {
       return string(abi.encodePacked(base, tokenId.toString()));
    }
 
-   function mint(address to, string memory tokenUri) onlyOwner() public {
+   function mint(address to, string memory tokenUri) onlyOwner() public returns (uint256){
       require(nftCurrentSupply > 0, "NftMaxSupply has been reached");
       //TODO 5 days for minting;
       nftCurrentSupply -= 1;
@@ -63,6 +63,7 @@ contract NFTUniqueAsset is ERC721, Ownable {
       uint256 tokenId = tokenIdCounter.current();
       _mint(to, tokenId);
       _setTokenURI(tokenId, tokenUri);
+      return tokenId;
    }
 
    function getTokenIdCounter() public view returns (uint256) {
