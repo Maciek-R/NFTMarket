@@ -10,4 +10,6 @@ npm install chai-as-promised
 
 // Testing
 
+ganache
+
 truffle test

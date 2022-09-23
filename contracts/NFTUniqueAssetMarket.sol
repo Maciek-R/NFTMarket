@@ -2,21 +2,22 @@
 pragma solidity ^0.8.0;
 
 import "./NFTUniqueAsset.sol";
+import "@openzeppelin/contracts/token/ERC721/IERC721Receiver.sol";
 
-contract NFTUniqueAssetMarket {
+contract NFTUniqueAssetMarket is IERC721Receiver {
 
-    address payable public owner;
     NFTUniqueAsset nftContract;
+
+    event NftBought();
+    event NftSold();
 
     constructor(string memory name, string memory symbol, uint256 maxSupply) payable {
         NFTUniqueAsset nftUniqueAssetContract = new NFTUniqueAsset(name, symbol, maxSupply);
-        owner = payable(msg.sender);
         nftContract = nftUniqueAssetContract;
     }
 
     function buyNft(string memory tokenUri) public payable {
         require(msg.value >= 1 ether, "To buy Nft you should pay 1 ETH!");
-        require(msg.sender != owner, "Owner can't buy NFT");
 
         nftContract.mint(msg.sender, tokenUri);
     }
@@ -25,14 +26,29 @@ contract NFTUniqueAssetMarket {
         return address(this).balance;
     }
 
-    function sellNft() public {
-        require(address(this).balance >= 1, "Contract does not have enough ETH!");
-        // unmint
+
+    function sellNft(uint256 tokenId) public {
+        require(address(this).balance >= 1 ether, "Contract does not have enough ETH!");
+
+        nftContract.safeTransferFrom(msg.sender, address(this), tokenId);
         address payable sender = payable(msg.sender);
-        sender.transfer(1);
+        sender.transfer(1 ether);
     }
 
     function ownerOf(uint256 tokenId) public view returns (address) {
         return nftContract.ownerOf(tokenId);
+    }
+
+    function getNftContractAddress() public view returns (address) {
+        return address(nftContract);
+    }
+
+    function onERC721Received(
+        address operator,
+        address from,
+        uint256 tokenId,
+        bytes calldata data
+    ) external returns (bytes4) {
+        return IERC721Receiver.onERC721Received.selector;
     }
 }

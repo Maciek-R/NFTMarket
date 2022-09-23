@@ -72,5 +72,4 @@ contract NFTUniqueAsset is ERC721, Ownable {
    function getNftCurrentSupply() public view returns (uint256) {
       return nftCurrentSupply;
    }
-
 }
