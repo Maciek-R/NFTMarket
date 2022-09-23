@@ -15,5 +15,9 @@
     "ethers": "^5.7.1",
     "ganache": "^7.4.3",
     "web3": "^1.8.0"
+  },
+  "devDependencies": {
+    "@openzeppelin/test-helpers": "^0.5.16",
+    "hardhat": "^2.10.2"
   }
 }
