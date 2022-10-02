@@ -5,8 +5,8 @@ import "./NFTUniqueAsset.sol";
 import "@openzeppelin/contracts/token/ERC721/IERC721Receiver.sol";
 
 contract NFTUniqueAssetMarket is IERC721Receiver {
-
     NFTUniqueAsset nftContract;
+
     event NftBought(address indexed buyer, uint256 tokenId);
     event NftSold(address indexed seller, uint256 tokenId);
 
@@ -16,7 +16,7 @@ contract NFTUniqueAssetMarket is IERC721Receiver {
     }
 
     function getNftPrice() public view returns (uint256) {
-        if (block.timestamp > nftContract.contractCreated() + 5 days) {
+        if (block.timestamp > nftContract.contractCreatedTimestamp() + 5 days) {
             return 2 ether;
         } else {
             return 1 ether;

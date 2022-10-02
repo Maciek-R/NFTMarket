@@ -16,12 +16,12 @@ contract NFTUniqueAsset is ERC721, Ownable {
 
    uint256 private nftMaxSupply;
    uint256 private nftCurrentSupply;
-   uint public contractCreated;
+   uint public contractCreatedTimestamp;
 
    constructor(string memory name, string memory symbol, uint256 maxSupply) ERC721(name, symbol) {
       nftMaxSupply = maxSupply;
       nftCurrentSupply = nftMaxSupply;
-      contractCreated = block.timestamp;
+      contractCreatedTimestamp = block.timestamp;
    }
 
    function setBaseURI(string memory baseURI_) external onlyOwner() {
