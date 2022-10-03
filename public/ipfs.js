@@ -1,6 +1,7 @@
 const {ethers} = require("ethers");
+require('../env');
 
-const url = "https://wispy-quick-gas.rinkeby.discover.quiknode.pro/e041c4c256f6a3b6b697aac7ed8280cf0456b4aa";
+const url = "https://rinkeby.infura.io/v3/" + process.env.INFURA_RINKEBY_KEY;
 
 const provider = new ethers.providers.JsonRpcProvider(url);
 const contractTokenAddress  = '0x461fdC8342c38858f5b542999612Bf0dae26efCC';

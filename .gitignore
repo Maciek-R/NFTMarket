@@ -1,9 +1,12 @@
 .idea
+env.js
 
 artifacts/
 build/
 cache/
 deployments/
 node_modules/
+
+public/bundle.js
 
 package-lock.json

@@ -1,6 +1,7 @@
 require("@nomiclabs/hardhat-waffle");
 require('hardhat-deploy');
 require("@nomiclabs/hardhat-etherscan");
+require("./env");
 
 module.exports = {
   solidity: {
