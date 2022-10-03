@@ -11,10 +11,10 @@ describe("NFTUniqueAssetMarket", async () => {
     let marketBalance = await marketInstance.getContractBalance();
     expect(marketBalance).to.equal(0);
 
-    await marketInstance.connect(signer1).buyNft("tokenUri", {value: ethers.utils.parseEther("1")});
+    await marketInstance.connect(signer1).buyNft("tokenUri", {value: ethers.utils.parseEther("0.01")});
 
     let marketBalanceAfterBuy = await marketInstance.getContractBalance();
-    expect(marketBalanceAfterBuy.toString()).to.equal(ethers.utils.parseEther("1"));
+    expect(marketBalanceAfterBuy.toString()).to.equal(ethers.utils.parseEther("0.01"));
 
     let ownerOfToken = await marketInstance.ownerOf(1);
     expect(ownerOfToken).to.equal(signer1.address);
@@ -24,7 +24,7 @@ describe("NFTUniqueAssetMarket", async () => {
     let marketInstance = await getNftUniqueAssetMarketInstance("Unique NFT Asset", "UNA", 100);
     const [_, signer1] = await ethers.getSigners();
 
-    let buyPromise = marketInstance.connect(signer1).buyNft("tokenUri", {value: ethers.utils.parseEther("0.5")});
+    let buyPromise = marketInstance.connect(signer1).buyNft("tokenUri", {value: ethers.utils.parseEther("0.005")});
     await expect(buyPromise).to.be.revertedWith("Not enough funds!");
 
     let marketBalance = await marketInstance.getContractBalance();
@@ -39,11 +39,11 @@ describe("NFTUniqueAssetMarket", async () => {
     let marketBalance = await marketInstance.getContractBalance();
     expect(marketBalance).to.equal(0);
 
-    let buyResult = await marketInstance.connect(signer1).buyNft("tokenUri", {value: ethers.utils.parseEther("1")});
+    let buyResult = await marketInstance.connect(signer1).buyNft("tokenUri", {value: ethers.utils.parseEther("0.01")});
     await expect(buyResult).to.emit(marketInstance, "NftBought").withArgs(signer1.address, 1);
 
     let marketBalanceAfterBuy = await marketInstance.getContractBalance();
-    expect(marketBalanceAfterBuy.toString()).to.equal(ethers.utils.parseEther("1"));
+    expect(marketBalanceAfterBuy.toString()).to.equal(ethers.utils.parseEther("0.01"));
 
     let owner = await marketInstance.ownerOf(1);
     expect(owner).to.equal(signer1.address);
@@ -66,13 +66,13 @@ describe("NFTUniqueAssetMarket", async () => {
 
     await time.increase(time.duration.days(5));
 
-    let buyPromise = marketInstance.connect(signer1).buyNft("tokenUri", {value: ethers.utils.parseEther("1")});
+    let buyPromise = marketInstance.connect(signer1).buyNft("tokenUri", {value: ethers.utils.parseEther("0.01")});
     await expect(buyPromise).to.be.revertedWith("Not enough funds!");
 
-    await marketInstance.connect(signer1).buyNft("tokenUri", {value: ethers.utils.parseEther("2")})
+    await marketInstance.connect(signer1).buyNft("tokenUri", {value: ethers.utils.parseEther("0.02")})
 
     let marketBalanceAfterBuy = await marketInstance.getContractBalance();
-    expect(marketBalanceAfterBuy.toString()).to.equal(ethers.utils.parseEther("2"));
+    expect(marketBalanceAfterBuy.toString()).to.equal(ethers.utils.parseEther("0.02"));
 
     let owner = await marketInstance.ownerOf(1);
     expect(owner).to.equal(signer1.address);
@@ -87,11 +87,11 @@ describe("NFTUniqueAssetMarket", async () => {
     let marketBalance = await marketInstance.getContractBalance();
     expect(marketBalance).to.equal(0);
 
-    await marketInstance.connect(signer1).buyNft("tokenUri1", {value: ethers.utils.parseEther("1")});
-    await marketInstance.connect(signer1).buyNft("tokenUri2", {value: ethers.utils.parseEther("1")});
+    await marketInstance.connect(signer1).buyNft("tokenUri1", {value: ethers.utils.parseEther("0.01")});
+    await marketInstance.connect(signer1).buyNft("tokenUri2", {value: ethers.utils.parseEther("0.01")});
 
     let marketBalanceAfterBuy = await marketInstance.getContractBalance();
-    expect(marketBalanceAfterBuy.toString()).to.equal(ethers.utils.parseEther("2"));
+    expect(marketBalanceAfterBuy.toString()).to.equal(ethers.utils.parseEther("0.02"));
 
     let ownerOfToken1 = await marketInstance.ownerOf(1);
     let ownerOfToken2 = await marketInstance.ownerOf(2);

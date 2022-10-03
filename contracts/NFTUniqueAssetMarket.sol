@@ -17,9 +17,9 @@ contract NFTUniqueAssetMarket is IERC721Receiver {
 
     function getNftPrice() public view returns (uint256) {
         if (block.timestamp > nftContract.contractCreatedTimestamp() + 5 days) {
-            return 2 ether;
+            return 0.02 ether;
         } else {
-            return 1 ether;
+            return 0.01 ether;
         }
     }
 
