@@ -10,11 +10,13 @@
   "license": "ISC",
   "dependencies": {
     "@openzeppelin/contracts": "^4.7.3",
+    "browserify": "^17.0.0",
     "chai": "^4.3.6",
     "chai-as-promised": "^7.1.1",
     "ethers": "^5.7.1",
     "ganache": "^7.4.3",
-    "hardhat-deploy": "^0.11.15"
+    "hardhat-deploy": "^0.11.15",
+    "uniq": "^1.0.1"
   },
   "devDependencies": {
     "@nomicfoundation/hardhat-network-helpers": "^1.0.6",
